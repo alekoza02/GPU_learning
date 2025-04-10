@@ -1,0 +1,102 @@
+% \documentclass[demo]{article}
+\documentclass{article}
+\usepackage{geometry}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage[english]{babel}
+\usepackage{braket}
+\usepackage{cancel}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  stringstyle=\color{orange},
+  commentstyle=\color{gray},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=5pt,
+  backgroundcolor=\color{white},
+  showspaces=false,
+  showstringspaces=false,
+  frame=single,
+  breaklines=true,
+  captionpos=b
+}
+
+\usepackage{hyperref}
+
+\setcounter{page}{0}
+
+\title{CUDA learning}
+\author{Alessio Cimma}
+
+\begin{document}
+
+\maketitle
+\newpage
+
+\tableofcontents
+\newpage
+
+\section{Project structure}
+
+The program will contain a \texttt{Bridge} class, which will help call different functions during training. The idea is to have a comfortable envoirement to learn new things. I'll add in near future new tools to make debugging, plotting, benchamrking and comparisons easier. Each exercise will be contained in a different \texttt{self.execute\_exerciseX()}. At the beginning of the program you will be asked to choose which CUDA kernel and function to load. Change it each time you want test different exercises. Possibly, each kernel will contain only one exercise, if the exercise needs more than one function they will all be contained in a single \texttt{.cu} file.
+
+\begin{lstlisting}[caption=Loading CUDA kernel (kernel.cu)]
+# Leggi il file contenente il kernel CUDA
+with open(f'{kernel_name}.cu', 'r') as f:
+    kernel_code = f.read()
+\end{lstlisting}
+
+\newpage
+\section{CUDA architecture}
+
+\subsection{Hierarchy of CUDA architecture}
+We have a grid, which determines the number of blocks, which are a collection of threads. A grid 2x2 contains 4 blocks. If each block is 32 threads, we will have 128 threads total.
+
+To determine the optimal amount of grid and blocks, organize the number of blocks and then derive the size of the grid using the following subsections.
+
+\subsection{How to launch a CUDA kernel} Remember that when launching the kernel, the first 2 arguments need to be passed as tuple (grid\_size and block\_size), even if it's just one number, to do it use the syntax \texttt{(x, )}:
+\begin{lstlisting}[caption=Launch CUDA kernel]
+# 1D version
+self.imported_kernel((grid_size,), (block_size,), (x, y, z, n)) 
+
+# 2D version
+self.imported_kernel(grid_size, block_size, (x, y, z, n)) 
+\end{lstlisting}
+
+
+\subsection{Best parameters (block\_size)} The following statistics should help choosing the best block-size to use in future projects, remember that you can't exceed the \textbf{MaxThreadsPerBlock} value (1024 on my laptop):
+\begin{itemize}
+    \item Memory-bound kernels (loads/stores): 256-1024 $\longrightarrow$ \textit{Hide latency via massive parallelism}
+    \item Compute-bound kernels: 128-512 $\longrightarrow$ \textit{More registers per thread may be needed}
+    \item Shared memory usage per block: 128-256 $\longrightarrow$ \textit{Avoid limiting number of resident blocks}
+    \item Register-heavy kernels: 128 or lower $\longrightarrow$ \textit{Prevent spilling and reduce pressure}
+    \item Small data sizes (n $<$ 10k): 64-256 $\longrightarrow$ \textit{Larger blocks may cause underutilization}
+    \item Thread divergence (if-else logic): 32-64 $\longrightarrow$ \textit{Keep warps smaller to minimize divergence waste}
+\end{itemize}
+
+
+\subsection{Best parameters (grid\_size)} The best grid size you can use is the following, it maximizes the usage of the GPU by dividing the problem equally across all blocks:
+\begin{lstlisting}[caption=Determine grid size]
+# 1D version
+grid_size = (n + block_size - 1) // block_size 
+
+# 2D version
+grid_size = (
+  (W_delta + block_size[0] - 1) // block_size[0],
+  (W_delta + block_size[1] - 1) // block_size[1]
+) 
+\end{lstlisting}
+
+\end{document}
