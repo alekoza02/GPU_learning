@@ -5,3 +5,10 @@
 *.out
 *.synctex.gz
 *.fdb_latexmk
+
+__pycache__/
+*.py[cod]
+
+*.so
+*.pyc
+*.pyo

@@ -75,6 +75,7 @@ self.imported_kernel((grid_size,), (block_size,), (x, y, z, n))
 self.imported_kernel(grid_size, block_size, (x, y, z, n)) 
 \end{lstlisting}
 
+\newpage
 
 \subsection{Best parameters (block\_size)} The following statistics should help choosing the best block-size to use in future projects, remember that you can't exceed the \textbf{MaxThreadsPerBlock} value (1024 on my laptop):
 \begin{itemize}
@@ -98,5 +99,45 @@ grid_size = (
   (W_delta + block_size[1] - 1) // block_size[1]
 ) 
 \end{lstlisting}
+
+\newpage
+
+\section{Exercise 1}
+\paragraph{Objective}
+Creating a kernel that sums two 1D arrays element-wise.
+\paragraph{What I learned}
+\begin{itemize}
+  \item To access the correct index at which I am working, I need to use:
+  \begin{lstlisting}[caption=Index access]
+int idx = threadIdx.x + blockIdx.x * blockDim.x;
+  \end{lstlisting}
+  This way, I enter the correct block position multiplied by the size of the block (measured in threads) and then add the thread index of its parent block.
+  \item  I should the following command to cover the edge case where i have a potential thread that can do some work, but there's no more work to be found (due to the size of the work not being a power of two):
+  \begin{lstlisting}[caption=Index edge-case]
+if (idx < n)
+  \end{lstlisting}
+\end{itemize}
+
+\newpage
+\section{Exercise 2}
+\paragraph{Objective}
+Creating a kernel that performs a convolution (morphological erosion).
+\paragraph{What I learned}
+  
+\begin{itemize}
+  \item If the grid is 2D I can access the indices X and Y of the block and thread:
+    \begin{lstlisting}[caption=Index access]
+int i = blockIdx.y * blockDim.y + threadIdx.y;
+int j = blockIdx.x * blockDim.x + threadIdx.x;
+    \end{lstlisting}
+  \item Now to check the new boundaries:
+    \begin{lstlisting}[caption=Index edge-case]
+if (i >= Size_x || j >= Size_y) return;
+    \end{lstlisting}
+    \item I can obtain the value of infinity without importing header files using:
+    \begin{lstlisting}[caption=Infinity]
+float min_val = 1.0f / 0.0f;
+    \end{lstlisting}
+\end{itemize}
 
 \end{document}
