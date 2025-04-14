@@ -177,4 +177,25 @@ for (int idx = local_thread_idx; idx < total_tile_size; idx += threads_per_block
 }
 \end{lstlisting}
 
+\newpage
+\section{Exercise 4 / 5}
+
+\paragraph{Objective:}
+
+Building a simple UV mapping and building a very simple shader. Visualize the result in pygame in real-time.
+
+\paragraph{What I learned:}
+\begin{itemize}
+  \item To increase performance you can use this to avoid branching:
+  \begin{lstlisting}[caption=Branchless-conditions]
+1.0f * (condition) + 0.0f * (1 - condition)
+  \end{lstlisting}
+  \item To increase performance you can use this to upgrade memory access pattern (use only if you are sure 2 pointers don't point to the same memory):
+  \begin{lstlisting}[caption=Restrict access]
+float* __restrict__ array
+  \end{lstlisting}
+  \item In \texttt{animation\_pygame.py} you can see how to load and animate a shader based on time and mouse position.
+\end{itemize}
+
+
 \end{document}

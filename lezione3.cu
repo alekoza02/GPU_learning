@@ -26,9 +26,6 @@ extern "C" __global__ void memory(
     // Shared memory with +1 padding to avoid bank conflicts
     __shared__ float ker_tile[TILE_KH * (TILE_KW + 1)];
 
-    int numTilesKH = (KH + TILE_KH - 1);
-    int numTilesKW = (KW + TILE_KW - 1);
-
     int outW = W - KW;
     unsigned long long startClock = clock64();
 
@@ -62,7 +59,7 @@ extern "C" __global__ void memory(
                     int global_ki = tile_offset_i + ki;
                     int global_kj = tile_offset_j + kj;
 
-                    if (global_ki < KH && global_kj < KW) {
+                    if (global_ki < KH && global_kj < KW && i + global_ki < H && j + global_kj < W){
                         float diff = img[(i + global_ki) * W + (j + global_kj)] - ker_tile[ki * (TILE_KW + 1) + kj];
                         if (diff < min_val) min_val = diff;
                     }
